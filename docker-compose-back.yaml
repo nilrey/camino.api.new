@@ -1,0 +1,23 @@
+version: '3'
+services:
+
+  camino-back:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.back
+    image: idockerapi      
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/sadmin/Work/mounts/export:/export
+      - /home/sadmin/Work/mounts/weights:/weights
+      - /home/sadmin/Documents/images/inputs:/inputs
+      - /home/sadmin/Documents/images/projects_data:/projects_data
+    ports:
+      - "8002:80"
+    container_name: camino-back
+    networks:
+      - camino-net 
+
+networks:
+  camino-net:
+    external: true
