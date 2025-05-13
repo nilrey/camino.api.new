@@ -14,7 +14,7 @@ services:
       # - /home/sadmin/Documents/images/inputs:/inputs
       # - /home/sadmin/Documents/images/projects_data:/projects_data
     ports:
-      - "8002:80"
+      - "8003:80"
     container_name: camino-back-new
     networks:
       - camino-net 

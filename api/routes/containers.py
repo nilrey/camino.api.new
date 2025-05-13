@@ -5,13 +5,31 @@ from api import schemas
 from pydantic import BaseModel
 from typing import Optional, Dict
 
+import psycopg2
+
 # Docker Endpoints
 router = APIRouter()
 
 @router.get("/docker/images/count")
 async def get_images_count():
+    version = None
+    try:
+        conn = psycopg2.connect(
+            host="10.0.0.1",
+            database="camino",
+            user="postgres",
+            password="postgres"
+        )
+        cur = conn.cursor()
+        cur.execute("SELECT version();")
+        version = cur.fetchone()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
     images = docker_service.list_images()
-    return {"count": len(images)}
+    return {"count": len(images), "db_ver:sion": version}
 
 @router.get("/docker/containers/count")
 async def get_containers_count():
@@ -27,7 +45,7 @@ async def create_container(request: schemas.CreateContainerRequest):
             ports=request.ports,
             environment=request.environment
         )
-        return {"container_id": container.get("Id")}
+        return {"container_id": container}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
