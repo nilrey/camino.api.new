@@ -21,7 +21,7 @@ logging.basicConfig(
     ]
 )
 
-client = docker.DockerClient(base_url='tcp://172.17.0.1:2375')
+client = docker.DockerClient(base_url=f'tcp://{VIRTUAL_MACHINE_LIST[0]}:2375')
 
 def list_images(): 
     return client.images()
