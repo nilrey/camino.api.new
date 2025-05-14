@@ -10,10 +10,10 @@ def list_containers(all=True):
     """Получить список контейнеров"""
     return client.containers(all=all)
 
-def create_container(image: str, name: str = None, ports: dict = None, environment: dict = None):
+def run_container(image: str, name: str = None, ports: dict = None, environment: dict = None):
     """Создать контейнер"""
 
-    container = client.containers.create(
+    container = client.containers.run(
         image="10.0.0.1:6000/bytetracker-image",
         command=[
             "--input_data", '{"det_path": "../weights/yolov8n.pt", "epochs": 2, "device": "gpu"}',
@@ -30,7 +30,7 @@ def create_container(image: str, name: str = None, ports: dict = None, environme
             "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_in": {"bind": "/input_data", "mode": "rw"},
             "/family/projects_data": {"bind": "/projects_data", "mode": "rw"}
         },
-        # remove=True,       
+        remove=True,       
         detach=True,       
         tty=True           
     )

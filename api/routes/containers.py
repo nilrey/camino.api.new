@@ -36,10 +36,10 @@ async def get_containers_count():
     containers = docker_service.list_containers(all=True)
     return {"count": len(containers)}
 
-@router.post("/docker/container/create")
-async def create_container(request: schemas.CreateContainerRequest):
+@router.post("/docker/container/run")
+async def run_container(request: schemas.CreateContainerRequest):
     try:
-        container = docker_service.create_container(
+        container = docker_service.run_container(
             image=request.image,
             name=request.name,
             ports=request.ports,
