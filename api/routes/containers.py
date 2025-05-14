@@ -39,13 +39,13 @@ async def get_containers_count():
 @router.post("/docker/container/run")
 async def run_container(request: schemas.CreateContainerRequest):
     try:
-        container = docker_service.run_container(
+        response = docker_service.run_container(
             image=request.image,
             name=request.name,
             ports=request.ports,
             environment=request.environment
         )
-        return {"container_id": container}
+        return {"message": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -64,3 +64,15 @@ async def stop_container(request: schemas.ContainerIdRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/docker/vm/check")
+async def get_vm_without_ann():
+    result, is_error = docker_service.find_vm_without_ann_images() 
+    if is_error:
+        message = f'Ошибка при просмотре VM: {result}'
+    elif result: 
+        message = f'Свободная VM: {result}'
+    else:
+        message = 'Нет свободных VM.'            
+
+    return {"message": message}

@@ -9,7 +9,7 @@ services:
     # image: idockerapi      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # - /home/sadmin/Work/mounts/export:/export
+      - /home/sadmin/Work/mounts/export:/export
       # - /home/sadmin/Work/mounts/weights:/weights
       # - /home/sadmin/Documents/images/inputs:/inputs
       # - /home/sadmin/Documents/images/projects_data:/projects_data
