@@ -13,20 +13,20 @@ router = APIRouter()
 @router.get("/docker/images/count")
 async def get_images_count():
     version = None
-    try:
-        conn = psycopg2.connect(
-            host="10.0.0.1",
-            database="camino",
-            user="postgres",
-            password="postgres"
-        )
-        cur = conn.cursor()
-        cur.execute("SELECT version();")
-        version = cur.fetchone()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    # try:
+    #     conn = psycopg2.connect(
+    #         host="10.0.0.1",
+    #         database="camino",
+    #         user="postgres",
+    #         password="postgres"
+    #     )
+    #     cur = conn.cursor()
+    #     cur.execute("SELECT version();")
+    #     version = cur.fetchone()
+    #     cur.close()
+    #     conn.close()
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e))
     
     images = docker_service.list_images()
     return {"count": len(images), "db_ver:sion": version}

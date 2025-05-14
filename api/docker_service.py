@@ -65,8 +65,6 @@ def run_container(image: str, name: str = None, ports: dict = None, environment:
     
     return message
 
-    
-
 def start_container(container_id: str): 
     try:
         container = client.containers.get(container_id)
@@ -99,10 +97,11 @@ def is_host_reachable(ip, port=2375, timeout=3):
             return True
     except (socket.timeout, socket.error):
         return False
+    
 
 def check_vm_containers(vm_ip, ann_images):
     if not is_host_reachable(vm_ip):
-        logging.error(f"{vm_ip} недоступен по TCP (порт 2375)")
+        logging.error(f"{vm_ip} недоступен")
         return True  # превышен таймаут подключение считаем, что VM можно пропустить
         
     try:
@@ -110,20 +109,20 @@ def check_vm_containers(vm_ip, ann_images):
         client = docker.DockerClient(base_url=f'tcp://{vm_ip}:2375', timeout=5) 
         containers = client.containers.list()
 
-        found_ann_image = False
+        has_ann_image = False
 
         for container in containers:
             image_tags = container.image.tags or [container.image.short_id]
             for tag in image_tags:
                 for ann_image in ann_images:
                     if ann_image in tag:
-                        found_ann_image = True
+                        has_ann_image = True
                         break
-                if found_ann_image:
+                if has_ann_image:
                     break
 
         client.close()
-        return found_ann_image
+        return has_ann_image
 
     except Exception as e:
         logging.error(f'Ошибка при подключении к {vm_ip}: {e}')
@@ -131,14 +130,12 @@ def check_vm_containers(vm_ip, ann_images):
         return True
 
 def find_vm_without_ann_images():
-    # VIRTUAL_MACHINE_LIST = ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4']
-    # VIRTUAL_MACHINE_LIST = ['172.17.0.1']
     is_error = True
     try:
         if not VIRTUAL_MACHINE_LIST:
             message = 'Список виртуальных машин пуст.'
         elif not ANN_IMAGES_LIST:
-            message = 'Список названий образов пуст.'
+            message = 'Список ИНС образов пуст.'
         else:
             for vm_ip in VIRTUAL_MACHINE_LIST:
                 logging.info(f'Проверка {vm_ip};')
@@ -147,13 +144,10 @@ def find_vm_without_ann_images():
                     is_error = False
                     logging.error(f'VM {vm_ip} свободна.')
                     return vm_ip, is_error
-            message = 'Все виртуальные машины содержат хотя бы один контейнер с ИНС или не доступны.'
+            message = 'Все виртуальные машины заняты.'
     except Exception as e:
         message = f'Ошибка find_vm_without_ann_images: {e}'
         
-    if is_error:
-        logging.error(message)
-    else:
-         logging.info(message)
+    logging.error(message) if is_error else logging.info(message)
 
     return message , is_error
