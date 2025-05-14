@@ -29,7 +29,7 @@ def list_images():
 def list_containers(all=True): 
     return client.containers(all=all)
 
-def run_container(image: str, name: str = None, ports: dict = None, environment: dict = None): 
+def run_container(): 
     vm_ip, is_error = find_vm_without_ann_images() 
     if is_error:
         message = f'Ошибка при просмотре списка VM: {vm_ip}'
@@ -38,21 +38,21 @@ def run_container(image: str, name: str = None, ports: dict = None, environment:
         container = client.containers.run(
             # image="10.0.0.1:6000/bytetracker-image",
             image="center-php",
-            # command=[
-            #     "--input_data", '{"det_path": "../weights/yolov8n.pt", "epochs": 2, "device": "gpu"}',
-            #     "--host_web", "http://10.0.0.1:8000"
-            # ],
-            # #runtime="nvidia",  
-            # # shm_size="20g",
-            # volumes={
-            #     "/family/video": {"bind": "/family/video", "mode": "rw"},
-            #     "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_out": {"bind": "/output", "mode": "rw"},
-            #     "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/bae82dd2-1c3f-11f0-82d2-0242ac140003/videos": {"bind": "/input_videos", "mode": "rw"},
-            #     "/family/weights/weights_tracker": {"bind": "/weights/", "mode": "rw"},
-            #     "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
-            #     "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_in": {"bind": "/input_data", "mode": "rw"},
-            #     "/family/projects_data": {"bind": "/projects_data", "mode": "rw"}
-            # },
+            command=[
+                "--input_data", '{"det_path": "../weights/yolov8n.pt", "epochs": 2, "device": "gpu"}',
+                "--host_web", "http://10.0.0.1:8000"
+            ],
+            #runtime="nvidia",  
+            # shm_size="20g",
+            volumes={
+                "/family/video": {"bind": "/family/video", "mode": "rw"},
+                "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_out": {"bind": "/output", "mode": "rw"},
+                "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/bae82dd2-1c3f-11f0-82d2-0242ac140003/videos": {"bind": "/input_videos", "mode": "rw"},
+                "/family/weights/weights_tracker": {"bind": "/weights/", "mode": "rw"},
+                "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
+                "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_in": {"bind": "/input_data", "mode": "rw"},
+                "/family/projects_data": {"bind": "/projects_data", "mode": "rw"}
+            },
             remove=True,       
             detach=True,       
             tty=True           

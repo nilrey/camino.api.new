@@ -4,7 +4,7 @@ from api import docker_service
 from api import schemas 
 from pydantic import BaseModel
 from typing import Optional, Dict
-
+from fastapi import APIRouter, Path
 import psycopg2
 
 # Docker Endpoints
@@ -36,15 +36,10 @@ async def get_containers_count():
     containers = docker_service.list_containers(all=True)
     return {"count": len(containers)}
 
-@router.post("/docker/container/run")
-async def run_container(request: schemas.CreateContainerRequest):
+@router.post("/images/{imageId}/run")
+async def run_container(request: schemas.CreateContainerRequest , imageId: str = Path(..., description="ID образа Docker")):
     try:
-        response = docker_service.run_container(
-            image=request.image,
-            name=request.name,
-            ports=request.ports,
-            environment=request.environment
-        )
+        response = docker_service.run_container()
         return {"message": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
