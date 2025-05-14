@@ -2,16 +2,13 @@ import docker
 
 client = docker.DockerClient(base_url='tcp://10.0.0.2:2375')
 
-def list_images():
-    """Получить список образов"""
+def list_images(): 
     return client.images()
 
-def list_containers(all=True):
-    """Получить список контейнеров"""
+def list_containers(all=True): 
     return client.containers(all=all)
 
-def run_container(image: str, name: str = None, ports: dict = None, environment: dict = None):
-    """Создать контейнер"""
+def run_container(image: str, name: str = None, ports: dict = None, environment: dict = None): 
 
     container = client.containers.run(
         image="10.0.0.1:6000/bytetracker-image",
@@ -61,13 +58,12 @@ def run_container(image: str, name: str = None, ports: dict = None, environment:
     # )
     return container.id
 
-def start_container(container_id: str):
-    """Запустить контейнер"""
+def start_container(container_id: str): 
     container = client.containers.get(container_id)
     container.start()
     return {"status": "started"}
 
-def remove_container(container_id: str, force=True):
-    """Удалить контейнер"""
-    client.remove_container(container=container_id, force=force)
-    return {"status": "removed"}
+def stop_container(container_id: str, force=True): 
+    container = client.containers.get(container_id)
+    container.stop(timeout=0) 
+    return {"status": "stopped"}

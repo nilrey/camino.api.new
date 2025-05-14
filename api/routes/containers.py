@@ -57,10 +57,10 @@ async def start_container(request: schemas.ContainerIdRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/docker/container/remove")
-async def remove_container(request: schemas.ContainerIdRequest):
+@router.delete("/docker/container/stop")
+async def stop_container(request: schemas.ContainerIdRequest):
     try:
-        result = docker_service.remove_container(container_id=request.container_id)
+        result = docker_service.stop_container(container_id=request.container_id)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
