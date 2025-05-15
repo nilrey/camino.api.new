@@ -9,7 +9,7 @@ from typing import List, Dict
 from api.config.vm import *
 import api.config.hosts as IP
 
-log_dir = '/home/ubuntu/Documents/back/logs'
+log_dir = '/export/logs'
 os.makedirs(log_dir, exist_ok=True)
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -39,7 +39,7 @@ def get_docker_images() -> List[Dict]:
                 for tag in image_tags:
                     name, tag_part = tag.split(":") if ":" in tag else (tag, "<none>")
                     images_info.append({
-                        "id": image.id,
+                        "id": image.id.replace("sha256:", ""),
                         "name": name,
                         "tag": tag_part,
                         "location": vm["name"],
@@ -53,6 +53,17 @@ def get_docker_images() -> List[Dict]:
             logging.error(f"Ошибка при подключении к {vm['name']} ({vm['host']}): {e}")
     return images_info
 
+def find_image_by_id(image_id: str):
+    try:
+        images = get_docker_images()
+        for image in images:
+            logging.info(f'{image.get("id")} {image_id}')
+            if image.get("id") == image_id:
+                logging.info(f"Image {image_id} found on VM: {image.get('location')}")
+                return image
+    except Exception as e:
+        logging.error(f"Error retrieving images from VM {image.get('location')}: {e}")
+    return None
 
 def list_images(): 
     return client.images()
@@ -103,7 +114,7 @@ def run_container(params):
     elif vm_ip:
         logging.info(f'params: {params}')
         client = docker.DockerClient(base_url=f'tcp://{vm_ip}:2375', timeout=5) 
-        image = '10.0.0.1:6000/bytetracker-image'  #params["imageId"]
+        image = find_image_by_id(params["imageId"]) # '10.0.0.1:6000/bytetracker-image'  #params["imageId"]
         name = params["name"]
         command = [
             "--input_data", params['hyper_params'],
@@ -133,7 +144,7 @@ def run_container(params):
 
         # Запуск контейнера
         container = client.containers.run(
-            image=image,
+            image=image['name'],
             name=name,
             command=command,
             device_requests=device_requests,

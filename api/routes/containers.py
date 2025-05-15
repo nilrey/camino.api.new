@@ -48,6 +48,30 @@ async def get_images_count():
     return {"count": len(images), "db_ver:sion": version}
 
 
+@router.get("/docker/images/{image_id}")
+async def get_docker_image(image_id: str):
+    try:
+        image = docker_service.find_image_by_id(image_id)
+        if image:
+            return {
+                "id": image.get("id", ""),
+                "name": image.get("name", ""),
+                "tag": image.get("tag", ""),
+                "location": image.get("location", ""),
+                "created_at": image.get("created_at", ""),
+                "size": image.get("size", ""),
+                "comment": image.get("comment", ""),
+                "archive": image.get("archive", "")
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Image not found")
+    except Exception as e:
+        return {
+            "code": 500,
+            "message": str(e)
+        }
+
+
 @router.get("/docker/containers/list")
 async def get_containers():
     try:
