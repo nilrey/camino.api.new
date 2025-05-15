@@ -35,9 +35,13 @@ def get_docker_images() -> List[Dict]:
             client = docker.DockerClient(base_url=f"tcp://{vm['host']}:{vm['port']}")
             images = client.images.list()
             for image in images:
-                image_tags = image.tags if image.tags else ["<none>:<none>"]
-                for tag in image_tags:
-                    name, tag_part = tag.split(":") if ":" in tag else (tag, "<none>")
+                  image_tags = image.tags if image.tags else ["<none>:<none>"]
+                  for tag in image_tags:
+                    if ":" in tag:
+                        name, tag_part = tag.rsplit(":", 1)
+                    else:
+                        name, tag_part = tag, "<none>"
+                    
                     images_info.append({
                         "id": image.id.replace("sha256:", ""),
                         "name": name,
@@ -46,7 +50,7 @@ def get_docker_images() -> List[Dict]:
                         "created_at": image.attrs.get("Created", ""),
                         "size": image.attrs.get("Size", 0),
                         "comment": image.attrs.get("Comment", ""),
-                        "archive": ""  # Заполните при необходимости
+                        "archive": ""
                     })
             client.close()
         except Exception as e:
