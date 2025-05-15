@@ -37,7 +37,7 @@ async def get_containers_count():
     return {"count": len(containers)}
 
 @router.post("/images/{imageId}/run")
-async def run_container(request: schemas.CreateContainerRequest , imageId: str):
+async def run_container(request: schemas.CreateContainerRequest , imageId: str = Path(...)):
     try:
         params = request.model_dump()
         params["imageId"] = imageId # 0d0eb38589601232c9ad9196d1eaa01db2280d7a2377860ecfe0e93883ef53e3
