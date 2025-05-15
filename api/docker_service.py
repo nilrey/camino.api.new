@@ -8,7 +8,7 @@ from datetime import datetime
 from api.config.vm import *
 import api.config.hosts as IP
 
-log_dir = '/export/logs'
+log_dir = '/home/ubuntu/Documents/back/logs'
 os.makedirs(log_dir, exist_ok=True)
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -23,7 +23,7 @@ logging.basicConfig(
     ]
 )
 
-client = docker.DockerClient(base_url=f'tcp://{VIRTUAL_MACHINES_LIST[0]}:2375')
+client = docker.DockerClient(base_url=f'tcp://10.0.0.2:2375')
 
 def list_images(): 
     return client.images()
@@ -38,12 +38,13 @@ def run_container(params):
     elif vm_ip:
         logging.info(f'params: {params}')
         client = docker.DockerClient(base_url=f'tcp://{vm_ip}:2375', timeout=5) 
-        image = params["imageId"]
+        image = '10.0.0.1:6000/bytetracker-image'  #params["imageId"]
         name = params["name"]
         command = [
             "--input_data", params['hyper_params'],
             "--host_web", IP.HOST_ANN
         ]
+        command.append('--work_format_training') if params['ann_mode'] == 'teach' else None
 
         volumes = {
             f'/family{params["video_storage"]}': {"bind": "/family/video", "mode": "rw"},
@@ -66,7 +67,6 @@ def run_container(params):
         ]
 
         # Запуск контейнера
-        client = docker.from_env()
         container = client.containers.run(
             image=image,
             name=name,

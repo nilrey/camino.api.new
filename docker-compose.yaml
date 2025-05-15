@@ -9,10 +9,7 @@ services:
     # image: idockerapi      
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /home/sadmin/Work/mounts/export:/export
-      # - /home/sadmin/Work/mounts/weights:/weights
-      # - /home/sadmin/Documents/images/inputs:/inputs
-      # - /home/sadmin/Documents/images/projects_data:/projects_data
+      - /home/ubuntu/Documents/back/export:/export
     ports:
       - "8003:80"
     container_name: camino-back-new
