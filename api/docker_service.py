@@ -1,10 +1,12 @@
-import docker
-import logging
-from docker.errors import NotFound, APIError
 import os
-from datetime import datetime
+import docker
+from docker.types import DeviceRequest
+from docker.errors import NotFound, APIError
 import socket
+import logging
+from datetime import datetime
 from api.config.vm import *
+import api.config.hosts as IP
 
 log_dir = '/export/logs'
 os.makedirs(log_dir, exist_ok=True)
@@ -21,7 +23,7 @@ logging.basicConfig(
     ]
 )
 
-client = docker.DockerClient(base_url=f'tcp://{VIRTUAL_MACHINE_LIST[0]}:2375')
+client = docker.DockerClient(base_url=f'tcp://{VIRTUAL_MACHINES_LIST[0]}:2375')
 
 def list_images(): 
     return client.images()
@@ -29,34 +31,55 @@ def list_images():
 def list_containers(all=True): 
     return client.containers(all=all)
 
-def run_container(): 
+def run_container(params): 
     vm_ip, is_error = find_vm_without_ann_images() 
     if is_error:
         message = f'Ошибка при просмотре списка VM: {vm_ip}'
     elif vm_ip:
+        logging.info(f'params: {params}')
         client = docker.DockerClient(base_url=f'tcp://{vm_ip}:2375', timeout=5) 
+        image = params["imageId"]
+        name = params["name"]
+        command = [
+            "--input_data", params['hyper_params'],
+            "--host_web", IP.HOST_ANN
+        ]
+
+        volumes = {
+            f'/family{params["video_storage"]}': {"bind": "/family/video", "mode": "rw"},
+            f'/family{params["out_dir"]}': {"bind": "/output", "mode": "rw"},
+            f'/family{params["in_dir"]}': {"bind": "/input_videos", "mode": "rw"},
+            f'/family{params["weights"]}': {"bind": "/weights/", "mode": "rw"},
+            f'/family{params["markups"]}': {"bind": "/input_data", "mode": "rw"},
+            "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
+            "/family/projects_data": {"bind": "/projects_data", "mode": "rw"}
+        }
+
+        # Формируем строку запуска для лога
+        volume_args = ' '.join([f'-v {host}:{opt["bind"]}:{opt["mode"]}' for host, opt in volumes.items()])
+        command_str = f"docker run --gpus all --shm-size=20g --name {name} {volume_args} {image} {' '.join(command)}"
+        logging.info(f"{command_str}")
+
+        # Используем device_requests для GPU
+        device_requests = [
+            DeviceRequest(count=-1, capabilities=[['gpu']])
+        ]
+
+        # Запуск контейнера
+        client = docker.from_env()
         container = client.containers.run(
-            # image="10.0.0.1:6000/bytetracker-image",
-            image="center-php",
-            command=[
-                "--input_data", '{"det_path": "../weights/yolov8n.pt", "epochs": 2, "device": "gpu"}',
-                "--host_web", "http://10.0.0.1:8000"
-            ],
-            #runtime="nvidia",  
-            # shm_size="20g",
-            volumes={
-                "/family/video": {"bind": "/family/video", "mode": "rw"},
-                "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_out": {"bind": "/output", "mode": "rw"},
-                "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/bae82dd2-1c3f-11f0-82d2-0242ac140003/videos": {"bind": "/input_videos", "mode": "rw"},
-                "/family/weights/weights_tracker": {"bind": "/weights/", "mode": "rw"},
-                "/var/run/docker.sock": {"bind": "/var/run/docker.sock", "mode": "rw"},
-                "/family/projects_data/bae0b840-1c3f-11f0-82d2-0242ac140003/9f9e112e-2caf-11f0-be61-0242ac140002/markups_in": {"bind": "/input_data", "mode": "rw"},
-                "/family/projects_data": {"bind": "/projects_data", "mode": "rw"}
-            },
-            remove=True,       
-            detach=True,       
-            tty=True           
+            image=image,
+            name=name,
+            command=command,
+            device_requests=device_requests,
+            shm_size="20g",
+            volumes=volumes,
+            remove=True,
+            detach=True,
+            tty=True
         )
+
+
         logging.info(f'Контейнер запущен на: {vm_ip}')
         message = container.id
     else:
@@ -132,12 +155,12 @@ def check_vm_containers(vm_ip, ann_images):
 def find_vm_without_ann_images():
     is_error = True
     try:
-        if not VIRTUAL_MACHINE_LIST:
+        if not VIRTUAL_MACHINES_LIST:
             message = 'Список виртуальных машин пуст.'
         elif not ANN_IMAGES_LIST:
             message = 'Список ИНС образов пуст.'
         else:
-            for vm_ip in VIRTUAL_MACHINE_LIST:
+            for vm_ip in VIRTUAL_MACHINES_LIST:
                 logging.info(f'Проверка {vm_ip};')
                 has_ann_image = check_vm_containers(vm_ip, ANN_IMAGES_LIST)
                 if not has_ann_image:
