@@ -5,6 +5,7 @@ from docker.errors import NotFound, APIError
 import socket
 import logging
 from datetime import datetime
+from typing import List, Dict
 from api.config.vm import *
 import api.config.hosts as IP
 
@@ -24,6 +25,34 @@ logging.basicConfig(
 )
 
 client = docker.DockerClient(base_url=f'tcp://10.0.0.2:2375')
+
+
+
+def get_docker_images() -> List[Dict]:
+    images_info = []
+    for vm in VIRTUAL_MACHINES_LIST:
+        try:
+            client = docker.DockerClient(base_url=f"tcp://{vm['host']}:{vm['port']}")
+            images = client.images.list()
+            for image in images:
+                image_tags = image.tags if image.tags else ["<none>:<none>"]
+                for tag in image_tags:
+                    name, tag_part = tag.split(":") if ":" in tag else (tag, "<none>")
+                    images_info.append({
+                        "id": image.id,
+                        "name": name,
+                        "tag": tag_part,
+                        "location": vm["name"],
+                        "created_at": image.attrs.get("Created", ""),
+                        "size": image.attrs.get("Size", 0),
+                        "comment": image.attrs.get("Comment", ""),
+                        "archive": ""  # Заполните при необходимости
+                    })
+            client.close()
+        except Exception as e:
+            logging.error(f"Ошибка при подключении к {vm['name']} ({vm['host']}): {e}")
+    return images_info
+
 
 def list_images(): 
     return client.images()

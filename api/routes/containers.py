@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from api import docker_service
 from api import schemas 
 from pydantic import BaseModel
@@ -9,6 +10,21 @@ import psycopg2
 
 # Docker Endpoints
 router = APIRouter()
+
+
+@router.get("/docker/images/list")
+async def list_docker_images():
+    try:
+        images = docker_service.get_docker_images()
+        return JSONResponse(content={
+            "pagination": {"totalItems": len(images)},
+            "items": images
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={
+            "code": 500,
+            "message": str(e)
+        })
 
 @router.get("/docker/images/count")
 async def get_images_count():
