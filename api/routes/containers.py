@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from fastapi.responses import JSONResponse
 from api import docker_service
 from api import schemas 
@@ -46,6 +46,29 @@ async def get_images_count():
     
     images = docker_service.list_images()
     return {"count": len(images), "db_ver:sion": version}
+
+
+@router.get("/docker/containers/list")
+async def get_containers():
+    try:
+        containers = docker_service.list_running_containers()
+        return {
+            "pagination": {
+                "totalItems": len(containers)
+            },
+            "items": containers
+        }
+    except Exception as e:
+        docker_service.logger.error(f"Error retrieving containers: {str(e)}")
+        return Response(
+            content={
+                "code": 500,
+                "message": str(e)
+            },
+            media_type="application/json",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 
 @router.get("/docker/containers/count")
 async def get_containers_count():

@@ -24,7 +24,7 @@ logging.basicConfig(
     ]
 )
 
-client = docker.DockerClient(base_url=f'tcp://10.0.0.2:2375')
+client = docker.DockerClient(base_url=f"tcp://{VIRTUAL_MACHINES_LIST[0]['host']}:{VIRTUAL_MACHINES_LIST[0]['port']}")
 
 
 
@@ -56,6 +56,42 @@ def get_docker_images() -> List[Dict]:
 
 def list_images(): 
     return client.images()
+
+
+def list_running_containers() -> List[Dict]:
+    containers_info = []
+    for vm in VIRTUAL_MACHINES_LIST:
+        try: 
+            client = docker.DockerClient(base_url=f"tcp://{vm['host']}:{vm['port']}")
+            containers = client.containers.list()
+            for container in containers:
+                command = container.attrs['Config']['Cmd']
+                command_str = " ".join(command) if isinstance(command, list) else str(command)
+
+                ports = container.attrs['NetworkSettings']['Ports']
+                ports_str = ", ".join([
+                    f"{container_port}" for container_port in ports.keys() if ports
+                ]) if ports else ""
+
+                container_info = {
+                    "id": container.id,
+                    "host": vm['host'],
+                    "image": {
+                        "id": container.image.id,
+                        "name": container.image.tags[0].split(":")[0] if container.image.tags else "",
+                        "tag": container.image.tags[0].split(":")[1] if container.image.tags else ""
+                    },
+                    "command": command_str,
+                    "names": container.name,
+                    "ports": ports_str,
+                    "created_at": container.attrs['Created'],
+                    "status": container.status
+                }
+                containers_info.append(container_info)
+        except Exception as e:
+            logging.error(f"Error connecting to {vm['host']}: {str(e)}")
+    return containers_info
+
 
 def list_containers(all=True): 
     return client.containers(all=all)
@@ -189,13 +225,13 @@ def find_vm_without_ann_images():
         elif not ANN_IMAGES_LIST:
             message = 'Список ИНС образов пуст.'
         else:
-            for vm_ip in VIRTUAL_MACHINES_LIST:
-                logging.info(f'Проверка {vm_ip};')
-                has_ann_image = check_vm_containers(vm_ip, ANN_IMAGES_LIST)
+            for vm in VIRTUAL_MACHINES_LIST:
+                logging.info(f"Проверка {vm['name']} [{vm['host']}]")
+                has_ann_image = check_vm_containers(vm['host'], ANN_IMAGES_LIST)
                 if not has_ann_image:
                     is_error = False
-                    logging.error(f'VM {vm_ip} свободна.')
-                    return vm_ip, is_error
+                    logging.error(f"VM {vm['host']} свободна.")
+                    return vm['host'], is_error
             message = 'Все виртуальные машины заняты.'
     except Exception as e:
         message = f'Ошибка find_vm_without_ann_images: {e}'
