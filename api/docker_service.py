@@ -6,6 +6,7 @@ import socket
 import logging
 from datetime import datetime
 from typing import List, Dict
+from api.config.config import *
 from api.config.vm import *
 import api.config.hosts as IP
 
@@ -142,9 +143,12 @@ def run_container(params):
         logging.info(f"{command_str}")
 
         # Используем device_requests для GPU
-        device_requests = [
-            DeviceRequest(count=-1, capabilities=[['gpu']])
-        ]
+        
+        device_requests = []
+        if not DEBUG_MODE:
+            device_requests = [
+                DeviceRequest(count=-1, capabilities=[['gpu']])
+            ]
 
         # Запуск контейнера
         container = client.containers.run(
@@ -154,7 +158,7 @@ def run_container(params):
             device_requests=device_requests,
             shm_size="20g",
             volumes=volumes,
-            remove=True,
+            # remove=True,
             detach=True,
             tty=True
         )
