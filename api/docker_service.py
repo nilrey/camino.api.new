@@ -158,7 +158,7 @@ def run_container(params):
             device_requests=device_requests,
             shm_size="20g",
             volumes=volumes,
-            # remove=True,
+            remove=True,
             detach=True,
             tty=True
         )
