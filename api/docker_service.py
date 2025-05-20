@@ -70,10 +70,6 @@ def find_image_by_id(image_id: str):
         logging.error(f"Error retrieving images from VM {image.get('location')}: {e}")
     return None
 
-def list_images(): 
-    return client.images()
-
-
 def list_running_containers() -> List[Dict]:
     containers_info = []
     for vm in VIRTUAL_MACHINES_LIST:
@@ -107,10 +103,6 @@ def list_running_containers() -> List[Dict]:
         except Exception as e:
             logging.error(f"Error connecting to {vm['host']}: {str(e)}")
     return containers_info
-
-
-def list_containers(all=True): 
-    return client.containers(all=all)
 
 def run_container(params): 
     vm_ip, is_error = find_vm_without_ann_images() 
@@ -173,19 +165,6 @@ def run_container(params):
     
     return message
 
-def start_container(container_id: str): 
-    try:
-        container = client.containers.get(container_id)
-        container.start()
-        logging.info(f"Контейнер {container_id} успешно запущен.")
-    except NotFound:
-        logging.warning(f"Контейнер с ID {container_id} не найден.")
-    except APIError as e:
-        logging.error(f"Ошибка Docker API: {e.explanation}")
-    except Exception as e:
-        logging.exception(f"Произошла непредвиденная ошибка: {e}")    
-    return {"status": "started"}
-
 def stop_container(container_id: str, force=True): 
     try:
         container = client.containers.get(container_id)
@@ -205,7 +184,6 @@ def is_host_reachable(ip, port=2375, timeout=3):
             return True
     except (socket.timeout, socket.error):
         return False
-    
 
 def check_vm_containers(vm_ip, ann_images):
     if not is_host_reachable(vm_ip):
