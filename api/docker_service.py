@@ -158,7 +158,7 @@ def run_container(params):
             device_requests=device_requests,
             shm_size="20g",
             volumes=volumes,
-            remove=True,
+            # remove=True,
             detach=True,
             tty=True
         )
@@ -166,6 +166,7 @@ def run_container(params):
 
         logging.info(f'Контейнер запущен на: {vm_ip}')
         message = container.id
+        logging.info(f'Контейнер id: {container.id}')
     else:
         message = 'Нет свободных VM.'
         logging.info(message)
