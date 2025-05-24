@@ -214,26 +214,19 @@ def create_start_container(params):
         if not DEBUG_MODE:
             device_requests = [DeviceRequest(count=-1, capabilities=[['gpu']])]
 
-        # Хост-конфигурация
-        host_config = client.api.create_host_config(
-            auto_remove=True,
-            shm_size="20g",
-            device_requests=device_requests,
-            binds={host: opt["bind"] + ":" + opt["mode"] for host, opt in volumes.items()}
-        )
-
-        # Создаём контейнер
         container = client.containers.create(
             image=image['name'],
             name=name,
             command=command,
             tty=True,
-            detach=True,
             stdin_open=True,
-            host_config=host_config
+            detach=True,
+            auto_remove=True,                 
+            shm_size="20g",                   
+            volumes=volumes,
+            device_requests=device_requests
         )
 
-        # Запускаем контейнер
         container.start()
 
         logging.info(f'Контейнер запущен')
