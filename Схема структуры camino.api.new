@@ -1,0 +1,36 @@
+camino.api.new/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                  ← FastAPI app + включение роутов
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes/
+│   │       ├── __init__.py
+│   │       ├── containers.py
+│   │       └── auth.py          ← пример: роуты авторизации
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py            ← загрузка .env и настроек
+│   │   └── logging_config.py    ← настройка логирования
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── containers.py
+│   │   └── auth.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── docker_service.py
+│   │   └── auth_service.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── user.py              ← SQLAlchemy модели (если есть БД)
+│   ├── db/
+│   │   ├── __init__.py
+│   │   ├── base.py              ← Base = declarative_base()
+│   │   └── session.py           ← создание SessionLocal
+│   └── utils/
+│       └── helpers.py
+├── .env                         ← переменные окружения
+├── Dockerfile
+├── docker-compose.yaml
+├── requirements.txt
+└── README.md

@@ -12,7 +12,7 @@ import psycopg2
 router = APIRouter()
 
 
-@router.get("/images")
+@router.get("/images", tags=["Docker-образы"])
 async def list_docker_images():
     try:
         images = docker_service.get_docker_images()
@@ -48,7 +48,7 @@ async def list_docker_images():
 #     return {"count": len(images), "db_ver:sion": version}
 
 
-@router.get("/images/{image_id}")
+@router.get("/images/{image_id}", tags=["Docker-образы"])
 async def get_docker_image(image_id: str):
     try:
         image = docker_service.find_image_by_id(image_id)
@@ -77,12 +77,12 @@ async def get_docker_image(image_id: str):
 #     containers = docker_service.list_containers(all=True)
 #     return {"count": len(containers)}
 
-@router.post("/images/{imageId}/run")
+@router.post("/images/{imageId}/run", tags=["Docker-образы"])
 async def run_container(request: schemas.CreateContainerRequest , imageId: str = Path(...)):
     try:
         params = request.model_dump()
         params["imageId"] = imageId # 0d0eb38589601232c9ad9196d1eaa01db2280d7a2377860ecfe0e93883ef53e3
-        response = docker_service.run_container(params)
+        response = docker_service.create_start_container(params)
         return {"message": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -95,18 +95,10 @@ async def run_container(request: schemas.CreateContainerRequest , imageId: str =
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
-# @router.delete("/docker/container/stop")
-# async def stop_container(request: schemas.ContainerIdRequest):
-#     try:
-#         result = docker_service.stop_container(container_id=request.container_id)
-#         return result
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/containers")
+@router.get("/containers", tags=["Docker-контейнеры"])
 async def get_containers():
     try:
-        containers = docker_service.list_running_containers()
+        containers = docker_service.get_docker_containers()
         return {
             "pagination": {
                 "totalItems": len(containers)
@@ -123,11 +115,50 @@ async def get_containers():
             media_type="application/json",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
 
-@router.get("/vm/check")
+@router.get("/containers/{containerId}", tags=["Docker-контейнеры"], summary="Получение информации о Docker-контейнере на сервере")
+async def api_docker_container(container_id: str):
+    try:
+        container = docker_service.find_container_by_id(container_id)
+        if container:
+            return container
+        else:
+            raise HTTPException(status_code=404, detail="Image not found")
+    except Exception as e:
+        return {
+            "code": 500,
+            "message": str(e)
+        }
+
+@router.put("/containers/{containerId}/stop", tags=["Docker-контейнеры"])
+async def stop_container(container_id: str = Path(..., alias="containerId")):
+    try:
+        result = docker_service.stop_container(container_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# @router.get("/containers/{containerId}/stop", tags=["Docker-контейнеры"], summary="Остановка контейнера на сервере")
+# async def api_docker_container(container_id: str):
+#     try:
+#         container = docker_service.find_container_by_id(container_id)
+#         if container:
+#             result = docker_service.stop_container(container_id=request.container_id)
+#             return result
+#         else:
+#             raise HTTPException(status_code=404, detail="Image not found")
+#     except Exception as e:
+#         return {
+#             "code": 500,
+#             "message": str(e)
+#         }
+
+
+@router.get("/vm/check", tags=["Виртуальные машины"])
 async def get_vm_without_ann():
     docker_service.logging.info("Начало обработки")
-    result, is_error = docker_service.find_vm_without_ann_images() 
+    result, is_error = docker_service.get_available_vm() 
     if is_error:
         message = f'Ошибка при просмотре VM: {result}'
     elif result: 
