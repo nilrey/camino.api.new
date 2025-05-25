@@ -15,7 +15,7 @@ log_dir = '/export/logs'
 os.makedirs(log_dir, exist_ok=True)
 
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_filename = os.path.join(log_dir, f"vm_checker_{timestamp}.log")
+log_filename = os.path.join(log_dir, f"{timestamp}_api_back_new.log")
 
 logging.basicConfig(
     level=logging.INFO,
